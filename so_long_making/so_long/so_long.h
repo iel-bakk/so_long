@@ -6,7 +6,7 @@
 /*   By: iel-bakk < iel-bakk@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/30 00:25:11 by iel-bakk          #+#    #+#             */
-/*   Updated: 2022/10/31 05:32:45 by iel-bakk         ###   ########.fr       */
+/*   Updated: 2022/11/01 04:17:06 by iel-bakk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,13 @@ void	is_map_valid(t_long_data *data);
 int		map_len(int fd);
 void	check_map_content(t_long_data *data, int fd);
 void	check_wall(char *str, t_long_data *data);
-void	check_line(char *str, t_long_data *data);
+void	check_line(char *str, t_long_data *data, int zero);
 int		collect_map_objects(char collect_me, t_long_data *data);
+int		compare_line_len(int len, char *str);
+void	store_map(t_long_data *data);
+void	zero_check(int zero, char *str);
+void	check_the_storage(t_long_data *data);
+void	free_map(t_long_data *data);
+int check_other_char (t_long_data *data);
 
 # endif

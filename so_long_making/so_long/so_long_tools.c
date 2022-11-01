@@ -6,7 +6,7 @@
 /*   By: iel-bakk < iel-bakk@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/30 00:48:49 by iel-bakk          #+#    #+#             */
-/*   Updated: 2022/10/31 07:49:31 by iel-bakk         ###   ########.fr       */
+/*   Updated: 2022/11/01 05:31:39 by iel-bakk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,14 +52,31 @@ void	is_map_valid(t_long_data *data)
 	data->y = map_len(fd);
 	close(fd);
 	if (data->y < 3)
-	{
-		printf("1\n");
 		found_error();
-		
-	}
 	fd = open(data->file_name, O_RDONLY);
 	check_map_content(data, fd);
-	
+	close(fd);
+	if (data->x == data->y)
+	{
+		found_error();
+		exit(EXIT_FAILURE);
+	}
+	store_map(data);
+}
+
+void	store_map(t_long_data *data)
+{
+	int		fd;
+	int		i;
+
+	i = 0;
+	fd = open(data->file_name, O_RDONLY);
+	data->map = (char **)malloc(sizeof(char *) * data->y + 1);
+	if (!data->map)
+		found_error();
+	while (i < data->y)
+		data->map[i++] = get_next_line(fd);
+	data->map[i] = NULL;
 }
 
 void	check_map_content(t_long_data *data, int fd)
@@ -70,49 +87,80 @@ void	check_map_content(t_long_data *data, int fd)
 	i = 0;
 	line  = get_next_line(fd);
 	data->x = ft_strlen(line);
-	while (i < data->y)
+	if (line[data->x - 1] == '\n')
+		data->x--;
+	while (i < data->y && line)
 	{
 		if (i == 0 || i == data->y - 1)
 			check_wall(line, data);
 		else
-			check_line(line, data);
+			check_line(line, data, 0);
 		free(line);
 		line  = get_next_line(fd);
 		i++;
 	}
+	close (fd);
 	free(line);
 }
 
-void	check_line(char *str, t_long_data *data)
+void	check_line(char *str, t_long_data *data, int zero)
 {
 	int	i;
 
 	i = 0;
-	if (ft_strlen(str) != data->x || data->x < 3)
+	if (!compare_line_len(data->x, str) || data->x < 3)
 	{
-	printf("2\n");
-
 		free(str);
 		found_error();
 	}
 	while (str[i])
 	{
+		zero += (str[i] == '0');
 		if (!compare_char(str[0], '1') || !compare_char(str[data->x - 1], '1'))
 		{
-			printf("3\n");
 			free(str);
 			found_error();
 		}
 		else if (!collect_map_objects(str[i], data))
 		{
-			printf("4\n");
 			free(str);
 			found_error();
 		}
 		i++;
 	}
+	zero_check(zero, str);
 }
 
+void	zero_check(int zero, char *str)
+{
+	if (!zero)
+	{
+		free(str);
+		found_error();
+	}
+}
+int check_other_char (t_long_data *data)
+{
+	int i = 0;
+	int j;
+	while(data->map[i])
+	{
+		j = 0;
+		while (data->map[i][j])
+		{
+			if (data->map[i][j] != 'C')
+				if (data->map[i][j] != 'P')
+					if (data->map[i][j] != 'E')
+						if (data->map[i][j] != '0')
+							if (data->map[i][j] != '1')
+								if (data->map[i][j] != '\n')
+									return (0);
+			j++;
+		}
+		i++;
+	}
+	return (1);
+}
 int	collect_map_objects(char collect_me, t_long_data *data)
 {
 	if (collect_me == 'P')
@@ -131,8 +179,8 @@ int	collect_map_objects(char collect_me, t_long_data *data)
 	}
 	else if (collect_me == 'C')
 		data->collect++;
-	else if (collect_me != '0' || collect_me != '1')
-		return (0);
+	else if (collect_me == '0' || collect_me == '1')
+		return (1);
 	return (1);
 }
 
@@ -141,22 +189,66 @@ void	check_wall(char *str, t_long_data *data)
 	int	i;
 
 	i = 0;
-	if (ft_strlen(str) != data->x || data->x < 3)
+	if (!compare_line_len(data->x, str) || data->x < 3)
 	{
-		printf("5\n");
 		free(str);
 		found_error();
 	}
 	while (str[i])
 	{
+		if (str[i] == '\n' && str[i + 1] == '\0')
+			break ;
 		if (!compare_char(str[i], '1'))
 		{
-			printf("char is %c\n 6\n", str[i]);
 			free(str);
 			found_error();
 		}
 		i++;
 	}
+}
+
+void	check_the_storage(t_long_data *data)
+{
+	if (data->player != 1)
+	{
+		free_map(data);
+		found_error();
+	}
+	if (!data->collect)
+	{
+		free_map(data);
+		found_error();
+	}
+	if (data->exit != 1)
+	{
+		free_map(data);
+		found_error();
+	}
+}
+
+void	free_map(t_long_data *data)
+{
+	char	*str;
+	int		i;
+
+	i = 0;
+	str = data->map[i];
+	while (str)
+	{
+		free(str);
+		str = data->map[++i];
+	}
+	free(data->map);
+}
+
+int	compare_line_len(int len, char *str)
+{
+	int	l;
+
+	l = ft_strlen(str);
+	if (str[l - 1] == '\n')
+		l--;
+	return (len == l);
 }
 
 int		map_len(int fd)
@@ -167,10 +259,7 @@ int		map_len(int fd)
 	len = 0;
 	tmp = get_next_line(fd);
 	if (!tmp)
-	{
-		printf("7\n");
 		found_error();
-	}
 	while (tmp)
 	{
 		++len;
@@ -198,17 +287,4 @@ void	initialize_struct(t_long_data *data)
 	data->x = 0;
 	data->y = 0;
 	data->lines_total = 0;
-}
-
-void	remove_newline(char *str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == '\n')
-			str[i] = '\0';
-		i++;
-	}
 }
