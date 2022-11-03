@@ -6,7 +6,7 @@
 /*   By: iel-bakk < iel-bakk@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/30 00:48:49 by iel-bakk          #+#    #+#             */
-/*   Updated: 2022/11/01 05:31:39 by iel-bakk         ###   ########.fr       */
+/*   Updated: 2022/11/03 06:04:07 by iel-bakk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,11 +56,6 @@ void	is_map_valid(t_long_data *data)
 	fd = open(data->file_name, O_RDONLY);
 	check_map_content(data, fd);
 	close(fd);
-	if (data->x == data->y)
-	{
-		found_error();
-		exit(EXIT_FAILURE);
-	}
 	store_map(data);
 }
 
@@ -287,4 +282,19 @@ void	initialize_struct(t_long_data *data)
 	data->x = 0;
 	data->y = 0;
 	data->lines_total = 0;
+}
+
+void	get_player_position(t_content *mc)
+{
+	while (mc->p->y < mc->data->y)
+	{
+		mc->p->x = 0;
+		while (mc->p->x < mc->data->x)
+		{
+			if (mc->data->map[mc->p->y][mc->p->x] == 'P')
+				return ;
+			mc->p->x++;
+		}
+		mc->p->y++;
+	}
 }
